@@ -1,4 +1,4 @@
-![Deploy](https://github.com/VincentErb/myglobe/actions/workflows/deploy.yml/badge.svg)
+![Deploy](https://github.com/VincentErb/my-globe/actions/workflows/deploy.yml/badge.svg)
 
 # 🌍 MyGlobe
 
