@@ -41,21 +41,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Pull Vercel project config + env vars (incl. VITE_* vars set in Vercel dashboard)
-      - name: Pull Vercel environment
-        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      # Build using Vercel's build pipeline (reads env vars pulled above)
+      # Vite bakes VITE_* vars into the bundle at build time — pass them explicitly
       - name: Build
-        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: npm run build
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_EDGE_BASE_URL: ${{ secrets.VITE_EDGE_BASE_URL }}
 
-      # Deploy the pre-built output — no rebuild on Vercel's side
+      # Convert dist/ into the Vercel Build Output API format expected by --prebuilt
+      - name: Prepare Vercel output
+        run: |
+          mkdir -p .vercel/output/static
+          cp -r dist/. .vercel/output/static/
+          printf '{"version":3,"routes":[{"handle":"filesystem"},{"src":"/(.*)","dest":"/index.html"}]}' \
+            > .vercel/output/config.json
+
       - name: Deploy
         run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:

@@ -59,6 +59,9 @@ Pushes to `main` trigger the GitHub Actions workflow which builds and deploys to
 | `VERCEL_PROJECT_ID` | `.vercel/project.json` after `npx vercel link` |
 | `SUPABASE_ACCESS_TOKEN` | supabase.com → Account → Access Tokens |
 | `SUPABASE_PROJECT_ID` | Supabase dashboard → Project Settings → General → Reference ID |
+| `VITE_SUPABASE_URL` | `https://YOUR_REF_ID.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…` |
+| `VITE_EDGE_BASE_URL` | `https://YOUR_REF_ID.supabase.co/functions/v1` |
 
 Supabase env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_EDGE_BASE_URL`) are set in the Vercel dashboard and pulled automatically at build time.
 
