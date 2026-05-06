@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local env
+.env
+.env.local
+.env.*.local
+
+# Vercel project config
+.vercel/
+
+# Supabase CLI temp files
+supabase/.temp/
+
+# Claude Code local settings
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+.vercel
