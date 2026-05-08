@@ -1,3 +1,5 @@
+import { BASE_PATH } from './session.js'
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Escapes a string for safe insertion into HTML. */
@@ -137,7 +139,7 @@ export function showShareOverlay({ sessionId, editKey, baseUrl }) {
       </div>
     </div>
 
-    <a href="/${esc(sessionId)}" class="btn btn-primary"
+    <a href="${baseUrl}${esc(sessionId)}" class="btn btn-primary"
        style="display:block;text-align:center;text-decoration:none;margin-top:20px">
       Open Globe →
     </a>
@@ -180,7 +182,7 @@ export function showErrorPage(message) {
         <p style="font-size:2rem;margin-bottom:16px">🌐</p>
         <h1 class="landing-title">Globe not found</h1>
         <p class="landing-subtitle">${esc(message)}</p>
-        <a href="/" class="btn btn-primary"
+        <a href="${BASE_PATH}/" class="btn btn-primary"
            style="display:inline-block;text-decoration:none;margin-top:20px">
           Create a new Globe
         </a>

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { BASE_PATH } from './session.js'
 import {
   latLngToVector3,
   buildPin,
@@ -35,7 +36,7 @@ function createGeodesicSphere(radius, detail) {
 
 async function loadTextures(renderer) {
   const loader    = new THREE.TextureLoader()
-  const colorMap  = await loader.loadAsync('/textures/natural-earth-3-no-ice-clouds-8k.jpg')
+  const colorMap  = await loader.loadAsync(`${BASE_PATH}/textures/natural-earth-3-no-ice-clouds-8k.jpg`)
   colorMap.colorSpace  = THREE.SRGBColorSpace
   colorMap.anisotropy  = renderer.capabilities.getMaxAnisotropy()
   colorMap.minFilter   = THREE.LinearMipmapLinearFilter

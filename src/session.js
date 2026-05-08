@@ -1,7 +1,7 @@
 import { sha256hex } from './crypto.js'
 
 // Set VITE_BASE_PATH=/globe (no trailing slash) when deploying behind a reverse proxy.
-const BASE_PATH = import.meta.env.VITE_BASE_PATH ?? ''
+export const BASE_PATH = import.meta.env.VITE_BASE_PATH ?? ''
 console.log('[session] VITE_BASE_PATH:', JSON.stringify(import.meta.env.VITE_BASE_PATH), '→ BASE_PATH:', JSON.stringify(BASE_PATH))
 
 /**
