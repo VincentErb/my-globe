@@ -23,7 +23,8 @@ async function main() {
 
       await createSession({ id, name, mode, editKeyHash: await sha256hex(rawKey) })
 
-      const baseUrl = window.location.origin + '/'
+      const BASE_PATH = import.meta.env.VITE_BASE_PATH ?? ''
+      const baseUrl = window.location.origin + BASE_PATH + '/'
       showShareOverlay({ sessionId: id, editKey: rawKey, baseUrl })
     })
     return

@@ -48,6 +48,7 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_EDGE_BASE_URL: ${{ secrets.VITE_EDGE_BASE_URL }}
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH }}
 
       # Convert dist/ into the Vercel Build Output API format expected by --prebuilt
       - name: Prepare Vercel output

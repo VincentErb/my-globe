@@ -1,9 +1,14 @@
 import { sha256hex } from './crypto.js'
 
+// Set VITE_BASE_PATH=/globe (no trailing slash) when deploying behind a reverse proxy.
+const BASE_PATH = import.meta.env.VITE_BASE_PATH ?? ''
+console.log('[session] VITE_BASE_PATH:', JSON.stringify(import.meta.env.VITE_BASE_PATH), '→ BASE_PATH:', JSON.stringify(BASE_PATH))
+
 /**
  * Reads the current URL to extract the session ID and optional edit key.
  *
- * URL format:
+ * URL format (standalone):   /<SESSION_ID>
+ * URL format (behind proxy): /globe/<SESSION_ID>
  *   /<SESSION_ID>          → view mode
  *   /<SESSION_ID>?key=KEY  → edit mode
  *
@@ -11,8 +16,9 @@ import { sha256hex } from './crypto.js'
  */
 export function parseUrl() {
   const pathname = window.location.pathname
+  const stripped = BASE_PATH ? pathname.slice(BASE_PATH.length) : pathname
   // Strip the leading '/', treat '' or '/' as "no session"
-  const sessionId = pathname.slice(1) || null
+  const sessionId = stripped.slice(1) || null
   const params = new URLSearchParams(window.location.search)
   const editKey = params.get('key') || null
   return { sessionId, editKey }
