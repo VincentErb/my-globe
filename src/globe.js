@@ -14,9 +14,8 @@ import {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const ENABLE_ZOOM        = true
 const DEFAULT_LNG        = 15      // longitude shown on load (≈ central Europe)
-const AUTO_ROTATE        = false   // set true to enable auto-rotation
+const AUTO_ROTATE        = true
 
 // ─── Module-level state set by initGlobe ─────────────────────────────────────
 
@@ -50,9 +49,9 @@ async function loadTextures(renderer) {
  * Initialises the Three.js scene inside #globe-container.
  * Must be called AFTER ui.showGlobePage() has injected #globe-container into the DOM.
  *
- * @param {{ onPinClick: (pinData) => void, onGlobeRightClick: ({lat, lng}) => void }} callbacks
+ * @param {{ onPinClick: (pinData) => void, onGlobeRightClick: ({lat, lng}) => void, enableZoom?: boolean }} callbacks
  */
-export async function initGlobe({ onPinClick, onGlobeRightClick }) {
+export async function initGlobe({ onPinClick, onGlobeRightClick, enableZoom = true }) {
   const container = document.getElementById('globe-container')
 
   // ── Renderer ────────────────────────────────────────────────────────────────
@@ -96,7 +95,7 @@ export async function initGlobe({ onPinClick, onGlobeRightClick }) {
   controls.dampingFactor    = 0.05
   controls.autoRotate       = AUTO_ROTATE
   controls.autoRotateSpeed  = 0.4
-  controls.enableZoom       = ENABLE_ZOOM
+  controls.enableZoom       = enableZoom
   controls.minDistance      = 1.5
   controls.maxDistance      = 5.0
   controls.enablePan        = false

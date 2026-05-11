@@ -18,8 +18,11 @@ export function latLngToVector3(lat, lng, r) {
 
 // ─── Shared materials ─────────────────────────────────────────────────────────
 
-const TRIP_MAT = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3, metalness: 0.1 })
-const HOME_MAT = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.3, metalness: 0.15 })
+// All matte (roughness=1, metalness=0) for a flat, 2D-friendly look
+const MARKER_MAT = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 1, metalness: 0 })
+const STAR_MAT   = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 1, metalness: 0 })
+const DOT_MAT    = new THREE.MeshStandardMaterial({ color: 0x0ea5e9, roughness: 1, metalness: 0 })
+const GEM_MAT    = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 1, metalness: 0 })
 
 export const SCALE_DEFAULT = new THREE.Vector3(1, 1, 1)
 export const SCALE_HOVER   = new THREE.Vector3(1.5, 1.5, 1.5)
@@ -32,44 +35,93 @@ export const allPinGroups = []
 /** All pin child Mesh objects — used by the raycaster. */
 export const pinMeshes = []
 
+// ─── Geometry helpers ─────────────────────────────────────────────────────────
+
+function makeStem(mat, stemH) {
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.003, stemH, 6), mat)
+  stem.position.y = stemH / 2
+  return stem
+}
+
+function makeStarShape(outerR, innerR, points) {
+  const shape = new THREE.Shape()
+  const step = Math.PI / points
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR
+    const angle = i * step - Math.PI / 2
+    const x = Math.cos(angle) * r
+    const y = Math.sin(angle) * r
+    i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)
+  }
+  shape.closePath()
+  return shape
+}
+
 // ─── Build / destroy ──────────────────────────────────────────────────────────
 
 /**
  * Builds a Three.js Group representing a pin at pinData.lat / pinData.lng.
  * pinData must include: { id, lat, lng, type, message, date }
  *
- * trip → red rotated-box (diamond) on a thin stem
- * home → blue torus ring on a thin stem
+ * marker → coral teardrop on stem (with stem)
+ * star   → amber 5-pointed star on stem (with stem)
+ * dot    → sky-blue flat circle, no stem
+ * gem    → emerald flat diamond, no stem
  */
 export function buildPin(pinData) {
   const STEM_H = 0.055
-  const isHome = pinData.type === 'home'
-  const mat = isHome ? HOME_MAT : TRIP_MAT
-
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.004, 0.003, STEM_H, 6),
-    mat,
-  )
-  stem.position.y = STEM_H / 2
-
+  const group  = new THREE.Group()
   let marker
-  if (isHome) {
-    marker = new THREE.Mesh(new THREE.TorusGeometry(0.026, 0.008, 8, 24), mat)
-    marker.rotation.x = Math.PI / 2   // hole faces outward (+Y normal)
-    marker.position.y = STEM_H + 0.012
+
+  if (pinData.type === 'marker') {
+    const stem = makeStem(MARKER_MAT, STEM_H)
+    stem.userData.pinGroup = group
+    group.add(stem)
+
+    // Teardrop: semicircle top + two lines converging to a point
+    const shape = new THREE.Shape()
+    const r = 0.024
+    shape.moveTo(-r, 0)
+    shape.absarc(0, 0, r, Math.PI, 0, false)  // top semicircle
+    shape.lineTo(0, -0.034)                   // right edge to tip
+    shape.closePath()                          // closes back to (-r, 0)
+    marker = new THREE.Mesh(new THREE.ShapeGeometry(shape, 12), MARKER_MAT)
+    marker.rotation.x = -Math.PI / 2          // lay flat, face outward from globe
+    marker.position.y = STEM_H + 0.004
+
+  } else if (pinData.type === 'star') {
+    const stem = makeStem(STAR_MAT, STEM_H)
+    stem.userData.pinGroup = group
+    group.add(stem)
+
+    marker = new THREE.Mesh(
+      new THREE.ShapeGeometry(makeStarShape(0.028, 0.012, 5)),
+      STAR_MAT,
+    )
+    marker.rotation.x = -Math.PI / 2
+    marker.position.y = STEM_H + 0.004
+
+  } else if (pinData.type === 'dot') {
+    marker = new THREE.Mesh(new THREE.CircleGeometry(0.038, 32), DOT_MAT)
+    marker.rotation.x = -Math.PI / 2          // flat on globe surface
+    marker.position.y = 0.005
+
   } else {
-    marker = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.009, 0.038), mat)
-    marker.rotation.y = Math.PI / 4   // 45° → diamond silhouette from above
-    marker.position.y = STEM_H + 0.005
+    // gem (default fallback)
+    const shape = new THREE.Shape()
+    shape.moveTo(0, 0.036)
+    shape.lineTo(0.026, 0)
+    shape.lineTo(0, -0.036)
+    shape.lineTo(-0.026, 0)
+    shape.closePath()
+    marker = new THREE.Mesh(new THREE.ShapeGeometry(shape), GEM_MAT)
+    marker.rotation.x = -Math.PI / 2
+    marker.position.y = 0.005
   }
 
-  const group = new THREE.Group()
-  group.add(stem, marker)
-
-  // Back-references so the raycaster can climb from mesh → group → pin data
-  stem.userData.pinGroup   = group
   marker.userData.pinGroup = group
-  group.userData.pin       = pinData   // full Supabase row incl. id
+  group.add(marker)
+  group.userData.pin = pinData   // full Supabase row incl. id
 
   // Orient the pin perpendicular to the globe surface at (lat, lng)
   const normal = latLngToVector3(pinData.lat, pinData.lng, 1.0).normalize()

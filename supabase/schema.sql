@@ -11,7 +11,7 @@ create table pins (
   session_id  text not null references sessions(id) on delete cascade,
   lat         float8 not null,
   lng         float8 not null,
-  type        text not null check (type in ('trip', 'home')),
+  type        text not null,
   message     text not null default '',
   date        date,
   created_at  timestamptz default now()

@@ -152,12 +152,19 @@ export function showShareOverlay({ sessionId, editKey, baseUrl }) {
 // ─── Globe page ───────────────────────────────────────────────────────────────
 
 /**
- * Renders the globe page skeleton (session header + globe container) into #app-root.
+ * Renders the globe page skeleton into #app-root.
+ * When isEmbedded is true, renders only the globe container (no header or chrome).
  * Must be called BEFORE initGlobe() so that #globe-container exists in the DOM.
  */
-export function showGlobePage(sessionName, mode, editMode) {
-  const modeLabel = modeLabelMap[mode] ?? mode
+export function showGlobePage(sessionName, mode, editMode, isEmbedded) {
   const root = document.getElementById('app-root')
+
+  if (isEmbedded) {
+    root.innerHTML = `<div id="globe-container" style="width:100vw;height:100vh;"></div>`
+    return
+  }
+
+  const modeLabel = modeLabelMap[mode] ?? mode
   root.innerHTML = `
     <div class="page">
       <header class="page-header">
@@ -167,7 +174,19 @@ export function showGlobePage(sessionName, mode, editMode) {
           ${editMode ? '<span class="edit-badge">✎ Editing</span>' : ''}
         </div>
       </header>
-      <div id="globe-container"></div>
+      <div class="globe-layout">
+        <div class="globe-hints">
+          <div class="hint-item"><span class="hint-key">Drag</span> to rotate</div>
+          <div class="hint-item"><span class="hint-key">Scroll</span> to zoom</div>
+          <div class="hint-item"><span class="hint-key">Right-click</span> to place pin</div>
+          <div class="hint-item"><span class="hint-key">Click pin</span> to view info</div>
+        </div>
+        <div id="globe-container"></div>
+        <div class="globe-hints-spacer"></div>
+      </div>
+      <div id="globe-controls">
+        <button id="rotate-toggle" class="globe-ctrl-btn" data-rotating="true">⏸ Pause rotation</button>
+      </div>
     </div>
   `
 }
@@ -236,8 +255,10 @@ export function openCreatePinModal({ lat, lng, onSubmit }) {
         <div class="form-group">
           <label class="form-label" for="pin-type">Type</label>
           <select class="form-select" id="pin-type">
-            <option value="trip">◆ Trip</option>
-            <option value="home">○ Home</option>
+            <option value="marker">📍 Marker</option>
+            <option value="star">⭐ Star</option>
+            <option value="dot">🔵 Dot</option>
+            <option value="gem">💎 Gem</option>
           </select>
         </div>
         <div class="form-group">
@@ -284,8 +305,10 @@ export function openCreatePinModal({ lat, lng, onSubmit }) {
  * Opens the pin info modal.
  * Shows message, date, coordinates. Optionally shows a delete button.
  */
+const TYPE_LABELS = { marker: 'Marker', star: 'Star', dot: 'Dot', gem: 'Gem' }
+
 export function openPinInfoModal({ pin, canDelete, onDelete }) {
-  const typeLabel    = pin.type === 'home' ? 'Home' : 'Trip'
+  const typeLabel    = TYPE_LABELS[pin.type] ?? pin.type
   const formattedDate = formatDate(pin.date)
 
   openModal(`

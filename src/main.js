@@ -1,7 +1,7 @@
 import { sha256hex } from './crypto.js'
 import { parseUrl, verifyEditKey, resolvePermissions, generateSessionId, generateEditKey } from './session.js'
 import { loadSessionData, createSession, createPin, deletePin } from './supabase.js'
-import { initGlobe, addPinToScene, removePinFromScene } from './globe.js'
+import { initGlobe, addPinToScene, removePinFromScene, setAutoRotate } from './globe.js'
 import {
   showCreateSessionPage,
   showShareOverlay,
@@ -46,10 +46,14 @@ async function main() {
 
   const perms = resolvePermissions(session.mode, keyVerified)
 
+  const isEmbedded = window.self !== window.top
+
   // ── Render globe page ──────────────────────────────────────────────────────
-  showGlobePage(session.name, session.mode, keyVerified)
+  showGlobePage(session.name, session.mode, keyVerified, isEmbedded)
 
   await initGlobe({
+    enableZoom: !isEmbedded,
+
     onGlobeRightClick: ({ lat, lng }) => {
       if (!perms.canCreate) return
       openCreatePinModal({
@@ -78,6 +82,31 @@ async function main() {
 
   // Add all existing pins to the scene
   pins.forEach((pin) => addPinToScene(pin))
+
+  // Wire up rotate toggle (only rendered when not embedded)
+  const rotateBtn = document.getElementById('rotate-toggle')
+  if (rotateBtn) {
+    rotateBtn.addEventListener('click', () => {
+      const rotating = rotateBtn.dataset.rotating === 'true'
+      setAutoRotate(!rotating)
+      rotateBtn.dataset.rotating = String(!rotating)
+      rotateBtn.textContent = !rotating ? '⏸ Pause rotation' : '▶ Resume rotation'
+    })
+  }
+
+  // Pause rotation while any modal is open, resume when it closes.
+  // Tracks user's intent so toggling the button while modal is open still works.
+  const modalRoot = document.getElementById('modal-root')
+  let rotatingBeforeModal = true
+  new MutationObserver(() => {
+    const modalOpen = modalRoot.children.length > 0
+    if (modalOpen) {
+      rotatingBeforeModal = rotateBtn ? rotateBtn.dataset.rotating === 'true' : true
+      setAutoRotate(false)
+    } else {
+      if (rotatingBeforeModal) setAutoRotate(true)
+    }
+  }).observe(modalRoot, { childList: true })
 }
 
 main()

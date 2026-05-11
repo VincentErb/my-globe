@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       typeof session_id !== 'string' ||
       typeof lat !== 'number' ||
       typeof lng !== 'number' ||
-      !['trip', 'home'].includes(type as string)
+      !['marker', 'star', 'dot', 'gem'].includes(type as string)
     ) {
       return json({ error: 'Invalid request body' }, 400)
     }
